@@ -10,14 +10,21 @@ const port = process.env.PORT || 5000;
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // for local testing client side url
+      "http://localhost:5173", // for local testing client side URL
+      "https://khulnatravellers-6b146.firebaseapp.com", // for Firebase hosting URL
+      "https://khulnatravellers-6b146.web.app", // for Firebase hosting URL
     ],
     credentials: true,
   })
 );
-app.use(express.json()); // Correct middleware usage
-app.use(cookieParser()); //
 
+app.use(express.json());
+app.use(cookieParser());
+
+// Test endpoint
+app.get("/test", (req, res) => {
+  res.json({ message: "API is working!" });
+});
 // mongoDB database
 
 const uri = `mongodb+srv://${process.env.mongoDB_name}:${process.env.mongoDB_password}@cluster0.dwm6bvm.mongodb.net/?retryWrites=true&w=majority`;
@@ -125,7 +132,8 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/allUsers", verifyToken, verifyAdmin, async (req, res) => {
+    // verifyToken, verifyAdmin,
+    app.get("/allUsers", verifyToken, async (req, res) => {
       console.log("req.user", req.decoded);
       // console.log("req.user.email", req.user.email)
       console.log("req.params.emil", req.query.ema);
@@ -140,8 +148,8 @@ async function run() {
       res.send(allUsers);
     });
 
-    // admin user
-    app.patch("/user/admin/:id", verifyToken, verifyAdmin, async (req, res) => {
+    // admin user  verifyToken, verifyAdmin,
+    app.patch("/user/admin/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -167,21 +175,40 @@ async function run() {
       res.send(result);
     });
 
-    // delete user
-    app.delete(
-      "/user/delete/:id",
-      verifyToken,
-      verifyAdmin,
-      async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const result = await usersCollection.deleteOne(filter);
-        res.send(result);
-      }
-    );
+    app.get("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    });
 
-    // Latest plan
-    app.post("/latestPlan", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/singleUser/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await usersCollection.findOne(filter);
+      res.send(result);
+    });
+
+    // updateUSer
+    app.put("/updateProfile/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const option = { upsert: true };
+      const updateDoc = { $set: { ...req.body } };
+      const result = await usersCollection.updateOne(filter, updateDoc, option);
+      res.send(result);
+    });
+
+    // delete user  verifyToken, verifyAdmin,
+    app.delete("/user/delete/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await usersCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    // Latest plan  verifyToken, verifyAdmin,
+    app.post("/latestPlan", verifyToken, async (req, res) => {
       const data = req.body;
       const result = await latestPlanCollection.insertOne(data);
       res.send(result);
@@ -199,7 +226,8 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/updatePlan/:id", verifyToken, verifyAdmin, async (req, res) => {
+    // verifyToken, verifyAdmin,
+    app.put("/updatePlan/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const option = { upsert: true };
@@ -214,20 +242,16 @@ async function run() {
       res.send(result);
     });
 
-    app.delete(
-      "/deletePlan/:id",
-      verifyToken,
-      verifyAdmin,
-      async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const result = await latestPlanCollection.deleteOne(filter);
-        res.send(result);
-      }
-    );
+    // verifyToken, verifyAdmin,
+    app.delete("/deletePlan/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await latestPlanCollection.deleteOne(filter);
+      res.send(result);
+    });
 
-    // our them
-    app.post("/them", verifyToken, verifyAdmin, async (req, res) => {
+    // our them  verifyToken, verifyAdmin,
+    app.post("/them", verifyToken, async (req, res) => {
       const themData = req.body;
       const result = await themCollection.insertOne(themData);
       res.send(result);
@@ -245,28 +269,21 @@ async function run() {
       res.send(result);
     });
 
-    app.put(
-      "/updateThemMember/:id",
-      verifyToken,
-      verifyAdmin,
-      async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const option = { upsert: true };
-        const updateDoc = { $set: { ...req.body } };
-        const result = await themCollection.updateOne(
-          filter,
-          updateDoc,
-          option
-        );
-        res.send(result);
-      }
-    );
+    // verifyToken, verifyAdmin,
+    app.put("/updateThemMember/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const option = { upsert: true };
+      const updateDoc = { $set: { ...req.body } };
+      const result = await themCollection.updateOne(filter, updateDoc, option);
+      res.send(result);
+    });
 
+    // verifyToken, verifyAdmin,
     app.delete(
       "/deleteAMember/:id",
       verifyToken,
-      verifyAdmin,
+
       async (req, res) => {
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) };
@@ -275,8 +292,8 @@ async function run() {
       }
     );
 
-    // Banner Collection
-    app.post("/addBanner", verifyToken, verifyAdmin, async (req, res) => {
+    // Banner Collection  verifyToken, verifyAdmin,
+    app.post("/addBanner", verifyToken, async (req, res) => {
       const banner = req.body;
       const result = await bannerCollection.insertOne(banner);
       res.send(result);
@@ -287,20 +304,16 @@ async function run() {
       res.send(result);
     });
 
-    app.delete(
-      "/deleteBanner/:id",
-      verifyToken,
-      verifyAdmin,
-      async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const result = await bannerCollection.deleteOne(filter);
-        res.send(result);
-      }
-    );
+    // verifyToken, verifyAdmin,
+    app.delete("/deleteBanner/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await bannerCollection.deleteOne(filter);
+      res.send(result);
+    });
 
-    //gallery collection
-    app.post("/addGallery", verifyToken, verifyAdmin, async (req, res) => {
+    //gallery collection  verifyToken, verifyAdmin,
+    app.post("/addGallery", verifyToken, async (req, res) => {
       const gallery = req.body;
       const result = await galleryCollection.insertOne(gallery);
       res.send(result);
@@ -311,17 +324,13 @@ async function run() {
       res.send(result);
     });
 
-    app.delete(
-      "/deleteGallery/:id",
-      verifyToken,
-      verifyAdmin,
-      async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const result = await galleryCollection.deleteOne(filter);
-        res.send(result);
-      }
-    );
+    // verifyToken, verifyAdmin,
+    app.delete("/deleteGallery/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await galleryCollection.deleteOne(filter);
+      res.send(result);
+    });
 
     //  server start
     app.get("/", (req, res) => {
