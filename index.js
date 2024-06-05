@@ -40,11 +40,7 @@ const client = new MongoClient(uri, {
 
 // middleWars
 
-const logger = (req, res, next) => {
-  console.log("log info", req.method);
-  console.log("log info url", req.url);
-  next();
-};
+
 
 async function run() {
   try {
@@ -59,6 +55,12 @@ async function run() {
     const galleryCollection = client
       .db("KhulnaTravelsDB")
       .collection("gallery");
+
+      const logger = (req, res, next) => {
+        console.log("log info", req.method);
+        console.log("log info url", req.url);
+        next();
+      };
 
     // verifyJWTToken Middleware
     const verifyToken = (req, res, next) => {
@@ -100,7 +102,7 @@ async function run() {
     };
 
     // auth related Api JWT
-    app.post("/jwt", async (req, res) => {
+    app.post("/jwt", logger, async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.JWT_SECRETE_TOKEN, {
         expiresIn: "1d",
@@ -116,7 +118,6 @@ async function run() {
 
     app.post("/logOut", async (req, res) => {
       const user = req.body;
-      console.log("log out user", user);
       res.clearCookie("token", { maxAge: 0 }).send({ success: true });
     });
 
@@ -134,21 +135,21 @@ async function run() {
 
     // verifyToken, verifyAdmin,
     app.get("/allUsers", verifyToken, async (req, res) => {
-      console.log("req.user", req.decoded);
+      // console.log("req.user", req.decoded);
       // console.log("req.user.email", req.user.email)
-      console.log("req.params.emil", req.query.ema);
+      // console.log("req.params.emil", req.query.ema);
       // this is only for special data(email)
       // console.log("tis email",req.user.email, req.query.emil)
-      if (!req.decoded.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
+      // if (!req.decoded.email) {
+      //   return res.status(403).send({ message: "forbidden access" });
+      // }
 
       const allUsers = await usersCollection.find({}).toArray();
 
       res.send(allUsers);
     });
 
-    // admin user  verifyToken, verifyAdmin,
+    // admin user  verifyToken, verifyAdmin, /user/admin/:id
     app.patch("/user/admin/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
