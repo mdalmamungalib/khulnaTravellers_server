@@ -11,8 +11,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // for local testing client side URL
-      "https://khulnatravellers-6b146.firebaseapp.com", // for Firebase hosting URL
-      "https://khulnatravellers-6b146.web.app", // for Firebase hosting URL
+      "https://khulna-traveller.firebaseapp.com", // for Firebase hosting URL
+      "https://khulna-traveller.web.app", // for Firebase hosting URL
     ],
     credentials: true,
   })
@@ -40,8 +40,6 @@ const client = new MongoClient(uri, {
 
 // middleWars
 
-
-
 async function run() {
   try {
     await client.connect(); // Connect to the MongoDB database
@@ -56,11 +54,11 @@ async function run() {
       .db("KhulnaTravelsDB")
       .collection("gallery");
 
-      const logger = (req, res, next) => {
-        console.log("log info", req.method);
-        console.log("log info url", req.url);
-        next();
-      };
+    const logger = (req, res, next) => {
+      console.log("log info", req.method);
+      console.log("log info url", req.url);
+      next();
+    };
 
     // verifyJWTToken Middleware
     const verifyToken = (req, res, next) => {
@@ -140,12 +138,10 @@ async function run() {
       // console.log("req.params.emil", req.query.ema);
       // this is only for special data(email)
       // console.log("tis email",req.user.email, req.query.emil)
-      // if (!req.decoded.email) {
-      //   return res.status(403).send({ message: "forbidden access" });
-      // }
-
+      if (!req.decoded.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
       const allUsers = await usersCollection.find({}).toArray();
-
       res.send(allUsers);
     });
 
@@ -201,12 +197,16 @@ async function run() {
     });
 
     // delete user  verifyToken, verifyAdmin,
-    app.delete("/user/delete/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const result = await usersCollection.deleteOne(filter);
-      res.send(result);
-    });
+    app.delete(
+      "/user/delete/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const result = await usersCollection.deleteOne(filter);
+        res.send(result);
+      }
+    );
 
     // Latest plan  verifyToken, verifyAdmin,
     app.post("/latestPlan", verifyToken, async (req, res) => {
@@ -244,12 +244,16 @@ async function run() {
     });
 
     // verifyToken, verifyAdmin,
-    app.delete("/deletePlan/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const result = await latestPlanCollection.deleteOne(filter);
-      res.send(result);
-    });
+    app.delete(
+      "/deletePlan/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const result = await latestPlanCollection.deleteOne(filter);
+        res.send(result);
+      }
+    );
 
     // our them  verifyToken, verifyAdmin,
     app.post("/them", verifyToken, async (req, res) => {
@@ -271,20 +275,27 @@ async function run() {
     });
 
     // verifyToken, verifyAdmin,
-    app.put("/updateThemMember/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const option = { upsert: true };
-      const updateDoc = { $set: { ...req.body } };
-      const result = await themCollection.updateOne(filter, updateDoc, option);
-      res.send(result);
-    });
+    app.put(
+      "/updateThemMember/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const option = { upsert: true };
+        const updateDoc = { $set: { ...req.body } };
+        const result = await themCollection.updateOne(
+          filter,
+          updateDoc,
+          option
+        );
+        res.send(result);
+      }
+    );
 
     // verifyToken, verifyAdmin,
     app.delete(
       "/deleteAMember/:id",
       verifyToken,
-
       async (req, res) => {
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) };
@@ -306,12 +317,16 @@ async function run() {
     });
 
     // verifyToken, verifyAdmin,
-    app.delete("/deleteBanner/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const result = await bannerCollection.deleteOne(filter);
-      res.send(result);
-    });
+    app.delete(
+      "/deleteBanner/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const result = await bannerCollection.deleteOne(filter);
+        res.send(result);
+      }
+    );
 
     //gallery collection  verifyToken, verifyAdmin,
     app.post("/addGallery", verifyToken, async (req, res) => {
@@ -326,12 +341,16 @@ async function run() {
     });
 
     // verifyToken, verifyAdmin,
-    app.delete("/deleteGallery/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const result = await galleryCollection.deleteOne(filter);
-      res.send(result);
-    });
+    app.delete(
+      "/deleteGallery/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const result = await galleryCollection.deleteOne(filter);
+        res.send(result);
+      }
+    );
 
     //  server start
     app.get("/", (req, res) => {
